@@ -35,6 +35,8 @@ An example `config.json` is given below.
 
 Currently only twitch is supported.
 
+The bot also writes to this configuration file with minimum and maximum records which should not be touched.
+
 ## Running and Dependencies
 
 The bot is just a self-contained python script, to run it just execute `python bot.py` and make
