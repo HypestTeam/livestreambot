@@ -7,6 +7,7 @@ class Stream(object):
         self.viewers = kwargs.get('viewers', None)
         self.display_name = kwargs.get('display_name', None)
         self.game = kwargs.get('game', None)
+        self.status = kwargs.get('status', 'No status').encode('utf-8')
 
 def prettify_json(js, f):
     json.dump(js, f, sort_keys=True, indent=4, separators=(',', ': '))
@@ -18,7 +19,7 @@ def update_streams(streams, result, game):
         channel = stream['channel']
         if stream['viewers'] and channel:
             try:
-                result.append(Stream(url=channel['url'], viewers=stream['viewers'], display_name=channel['display_name'], game=game))
+                result.append(Stream(url=channel['url'], viewers=stream['viewers'], display_name=channel['display_name'], game=game, status=channel['status']))
             except Exception as e:
                 name = channel.get('name', 'null')
                 print('Something happened over at channel {} for game {}'.format(name, game))
