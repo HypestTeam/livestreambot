@@ -106,12 +106,21 @@ def update_wiki(reddit, streams):
     reddit.edit_wiki_page(reddit.get_subreddit(subreddit), config.get('wiki', 'livestreams'), '\n'.join(result), 'Bot action')
     print('done...')
 
+def attempt_update(reddit, streams):
+    try:
+        update_sidebar(reddit, streams)
+        update_wiki(reddit, streams)
+    except Exception as e:
+        # try again in 1 minute
+        print('An error has occurred: ', str(e))
+        time.sleep(60)
+        attempt_update(reddit, streams)
+
 if __name__ == '__main__':
     config = get_config()
     reddit = prepare_bot()
     while True:
         print(datetime.now().strftime('Current time %X'))
         streams = twitch.get_streams()
-        update_sidebar(reddit, streams)
-        update_wiki(reddit, streams)
+        attempt_update(reddit, streams)
         time.sleep(config.get('delay', 900))
