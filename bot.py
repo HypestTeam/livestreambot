@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 import twitch
 import re, json, sys
 import praw
@@ -6,22 +7,15 @@ from datetime import datetime
 import time
 import xml.sax.saxutils as saxutils
 
-game_to_format = {
-    'Super Smash Bros. Melee': '[^^**Melee** **{name}**{viewer}]({url})',
-    'Super Smash Bros. for Nintendo 3DS': '[^^^^^**Smash3DS** **{name}**{viewer}]({url})',
-    'Super Smash Bros. for Wii U': '[^^^^^^**SmashWiiU** **{name}**{viewer}]({url})',
-    'Project M': '[^^^^**ProjectM** **{name}**{viewer}]({url})',
-    'Super Smash Bros.': '[^^^**Smash64** **{name}**{viewer}]({url})'
-}
-
 config = {}
 
 def get_updated_sidebar_portion(streams):
     result = ['###### START STREAM LIST\n']
+    game_to_format = config['format']
     for stream in streams[0:config.get('top_cut', 10)]:
         temp = '- '
-        temp += game_to_format[stream.game]
-        result.append(temp.format(name=stream.display_name, url=stream.url, viewer=stream.viewers))
+        temp += game_to_format.get(stream.game, '[{name}]({url}) {viewers} viewers')
+        result.append(temp.format(name=stream.display_name, url=stream.url, viewers=stream.viewers))
         result.append('')
 
     result.append('\n###### END STREAM LIST')
@@ -31,22 +25,32 @@ def get_config():
     with open('config.json') as f:
         return json.load(f)
 
+def verify_valid_config():
+    required_entries = ['user_agent', 'username', 'password', 'subreddit', 'games', 'format']
+    failure = False
+    error_message = ['bot configuration is valid']
+    for entry in required_entries:
+        if entry not in config:
+            failure = True
+            error_message.append('    note: could not find value for key "{}"'.format(entry))
+
+    stream = sys.stdout
+    if failure:
+        error_message[0] = 'fatal error: could not configure bot properly'
+        stream = sys.stderr
+
+    print('\n'.join(error_message), file=stream)
+    if failure:
+        sys.exit(1)
+
 def update_config():
     with open('config.json', 'w') as f:
         twitch.prettify_json(config, f)
 
 def prepare_bot():
-    try:
-        r = praw.Reddit(config['user_agent'])
-        r.login(config['username'], config['password'])
-        return r
-    except Exception as e:
-        print('fatal error occured: could not configure bot')
-        print('note: possibly forgot to write config.json')
-        print('note: "username", "user_agent", "subreddit", and "password" fields are required')
-        print('The exception string was as follows:')
-        print(e)
-        sys.exit(1)
+    r = praw.Reddit(config['user_agent'])
+    r.login(config['username'], config['password'])
+    return r
 
 def update_sidebar(reddit, streams):
     print('updating sidebar...')
@@ -112,15 +116,16 @@ def attempt_update(reddit, streams):
         update_wiki(reddit, streams)
     except Exception as e:
         # try again in 1 minute
-        print('An error has occurred: ', str(e))
+        print('An error has occurred: {}, trying again in one minute...'.format(str(e)))
         time.sleep(60)
         attempt_update(reddit, streams)
 
 if __name__ == '__main__':
     config = get_config()
+    verify_valid_config()
     reddit = prepare_bot()
     while True:
         print(datetime.now().strftime('Current time %X'))
-        streams = twitch.get_streams()
+        streams = twitch.get_streams(config['games'])
         attempt_update(reddit, streams)
-        time.sleep(config.get('delay', 900))
+        time.sleep(config.get('delay', 1800))

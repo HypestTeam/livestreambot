@@ -35,17 +35,14 @@ def get_game(stream_url, streams, game_name):
     update_streams(iterate_streams, streams, game_name)
 
 
-def get_streams():
+def get_streams(games):
     base_url = 'https://api.twitch.tv/kraken/'
     stream_url = base_url + 'streams'
     streams = []
 
     # get the games
-    get_game(stream_url, streams, 'Super Smash Bros. Melee')
-    get_game(stream_url, streams, 'Super Smash Bros. for Nintendo 3DS')
-    get_game(stream_url, streams, 'Super Smash Bros. for Wii U')
-    get_game(stream_url, streams, 'Super Smash Bros.')
-    get_game(stream_url, streams, 'Project M')
+    for game in games:
+        get_game(stream_url, streams, game)
 
     # sort based on viewers
     streams.sort(key=lambda x: x.viewers, reverse=True)
