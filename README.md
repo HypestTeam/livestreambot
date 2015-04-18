@@ -18,19 +18,37 @@ user_agent | string | The bot's user agent
 top_cut | integer | How many streams to display in the sidebar at most
 delay | integer | Length between updates in seconds.
 wiki | string | The wiki page name to update.
+games | array of strings | A list of games to search Twitch on
+format | dictionary | A key value pair of games to format for the sidebar
 
 An example `config.json` is given below.
 
 ```js
 {
-    "username": "myboy",
+    "delay": 1800,
     "password": "mypassword",
-    "subreddit": "testing",
-    "user_agent": "Livestream Bot for /r/testing -- written by /u/rapptz",
+    "subreddit": "mycoolsubreddit",
     "top_cut": 10,
-    "delay": 900,
-    "wiki": "livestreams"
+    "user_agent": "Livestream updater for /r/testing -- written by /u/rapptz",
+    "username": "mycoolusername",
+    "wiki": "livestreams",
+    "games": [
+        "Super Smash Bros. Melee",
+        "Super Smash Bros. for Nintendo 3DS",
+        "Super Smash Bros. for Wii U",
+        "Project M",
+        "Super Smash Bros."
+    ],
+
+    "format": {
+        "Super Smash Bros. Melee": "[^^**Melee** **{name}**{viewers}]({url})",
+        "Super Smash Bros. for Nintendo 3DS": "[^^^^^**Smash3DS** **{name}**{viewers}]({url})",
+        "Super Smash Bros. for Wii U": "[^^^^^^**SmashWiiU** **{name}**{viewers}]({url})",
+        "Project M": "[^^^^**ProjectM** **{name}**{viewers}]({url})",
+        "Super Smash Bros.": "[^^^**Smash64** **{name}**{viewers}]({url})"
+    }
 }
+
 ```
 
 Currently only twitch is supported.
@@ -39,11 +57,23 @@ The bot also writes to this configuration file with minimum and maximum records 
 
 ## Running and Dependencies
 
-The bot is just a self-contained python script, to run it just execute `python bot.py` and make
-sure the configuration above is all set up. There are a couple dependencies.
+There are a couple dependencies.
 
 - [praw](https://github.com/praw-dev/praw), which is used for the reddit API integration.
 - [requests](https://github.com/kennethreitz/requests/) which is used for the HTTP requests.
+
+Installing the dependencies should be as easy as doing:
+
+    pip install praw && pip install requests
+
+On the command line.
+
+Once you have those dependencies set up and the configuration above is valid, you can run the bot yourself by doing `python bot.py`. There's
+a tutorial to help you set it up for your own subreddit in [the wiki][tut].
+
+If the configuration is invalid, then the bot will tell you so.
+
+[tut]: https://github.com/HypestTeam/livestreambot/wiki/Using-On-Your-Own-Subreddit
 
 ## License
 
