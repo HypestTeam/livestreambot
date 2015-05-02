@@ -94,7 +94,8 @@ def update_wiki(reddit, streams):
     result.append(':---------|:-------|:-------:|:-------')
     for stream in streams:
         total += stream.viewers
-        result.append('{0.game}|[{0.display_name}]({0.url})|{0.viewers}|{0.status}'.format(stream))
+        status = stream.status.replace('|', '&#124;') # escape special character for tables
+        result.append('{0.game}|[{0.display_name}]({0.url})|{0.viewers}|{1}'.format(stream, status))
 
     # check for minimum and maximum
     (minimum, minimum_record) = get_record('minimum', total, today, strftime_str, lambda x,y: x < y)
