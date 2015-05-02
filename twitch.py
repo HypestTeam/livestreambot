@@ -7,7 +7,7 @@ class Stream(object):
         self.viewers = kwargs.get('viewers', None)
         self.display_name = kwargs.get('display_name', None)
         self.game = kwargs.get('game', None)
-        self.status = kwargs.get('status', 'No status').encode('utf-8')
+        self.status = kwargs.get('status', 'No status').encode('utf-8').strip()
 
 def prettify_json(js, f):
     json.dump(js, f, sort_keys=True, indent=4, separators=(',', ': '))
