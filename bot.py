@@ -79,13 +79,13 @@ def update_wiki(reddit, streams):
     print('updating wiki...')
     subreddit = config['subreddit']
     interval = config['delay']
-    strftime_str = '%b %d %Y at %I:%M %p'
+    strftime_str = '%b %d %Y at %I:%M %p UTC'
     result = ['Welcome to the /r/{} livestream page!\n'.format(subreddit)]
     result.append('This page is automatically updated by /u/{name} and should not be edited. This page currently '
                   'gets updated every {t} minutes. If something seems wrong, please contact the subreddit '
                   'moderators.\n'.format(name=config['username'], t=interval/60))
 
-    today = datetime.now()
+    today = datetime.utcnow()
     total = 0
     result.append('### Streams')
     result.append('')
