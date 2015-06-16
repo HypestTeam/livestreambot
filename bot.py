@@ -121,12 +121,21 @@ def attempt_update(reddit, streams):
         time.sleep(60)
         attempt_update(reddit, streams)
 
+def attempt_streams(games):
+    try:
+        return twitch.get_streams(games)
+    except Exception as e:
+        # error happened here so attempt to retry
+        print('An error has occurred:\n{}\nTrying again in five minutes...')
+        time.sleep(60 * 5)
+        return attempt_streams(games)
+
 if __name__ == '__main__':
     config = get_config()
     verify_valid_config()
     reddit = prepare_bot()
     while True:
         print(datetime.now().strftime('Current time %X'))
-        streams = twitch.get_streams(config['games'])
+        streams = attempt_streams(config['games'])
         attempt_update(reddit, streams)
         time.sleep(config.get('delay', 1800))
