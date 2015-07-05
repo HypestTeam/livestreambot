@@ -9,6 +9,9 @@ import xml.sax.saxutils as saxutils
 
 config = {}
 
+def prettify_json(js, f):
+    json.dump(js, f, sort_keys=True, indent=4, separators=(',', ': '))
+
 def get_updated_sidebar_portion(streams):
     result = ['###### START STREAM LIST\n']
     game_to_format = config['format']
@@ -26,7 +29,7 @@ def get_config():
         return json.load(f)
 
 def verify_valid_config():
-    required_entries = ['user_agent', 'username', 'password', 'subreddit', 'games', 'format']
+    required_entries = ['user_agent', 'username', 'password']
     failure = False
     error_message = ['bot configuration is valid']
     for entry in required_entries:
@@ -45,7 +48,7 @@ def verify_valid_config():
 
 def update_config():
     with open('config.json', 'w') as f:
-        twitch.prettify_json(config, f)
+        prettify_json(config, f)
 
 def prepare_bot():
     r = praw.Reddit(config['user_agent'])

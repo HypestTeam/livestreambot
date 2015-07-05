@@ -9,9 +9,6 @@ class Stream(object):
         self.game = kwargs.get('game', None)
         self.status = kwargs.get('status', 'No status').encode('utf-8').strip()
 
-def prettify_json(js, f):
-    json.dump(js, f, sort_keys=True, indent=4, separators=(',', ': '))
-
 def update_streams(streams, result, game):
     # update the stream list
     for stream in streams:
