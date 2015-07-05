@@ -97,7 +97,7 @@ def update_wiki(reddit, streams):
     result = ['Welcome to the /r/{} livestream page!\n'.format(subreddit)]
     result.append('This page is automatically updated by /u/{name} and should not be edited. This page currently '
                   'gets updated every {t} minutes. If something seems wrong, please contact the subreddit '
-                  'moderators.\n'.format(name=config['username'], t=interval/60))
+                  'moderators or /u/rapptz.\n'.format(name=config['username'], t=interval/60))
 
     today = datetime.utcnow()
     total = 0
