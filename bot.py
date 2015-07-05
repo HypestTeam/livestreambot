@@ -18,7 +18,10 @@ def get_updated_sidebar_portion(streams):
     game_to_format = subreddit_config['format']
     for stream in streams[0:subreddit_config.get('top_cut', 10)]:
         temp = '- '
-        temp += game_to_format.get(stream.game, '[{name}]({url}) {viewers} viewers')
+        game_format = game_to_format.get(stream.game, None)
+        if not game_format:
+            game_format = '[{name}]({url}) {viewers} viewers'
+        temp += game_format
         result.append(temp.format(name=stream.display_name.strip(), url=stream.url, viewers=stream.viewers))
         result.append('')
 
