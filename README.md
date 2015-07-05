@@ -15,39 +15,47 @@ Key | Value Type | Description
 username | string | The reddit username
 password | string | The reddit password
 user_agent | string | The bot's user agent
-top_cut | integer | How many streams to display in the sidebar at most
 delay | integer | Length between updates in seconds.
+subreddits | list of objects | A list of objects that gives information of what subreddits to update
+
+Likewise, the subreddits object requires these keys:
+
+Key | Value Type | Description
+:----|:----------|:------------
+name | string | The subreddit name
+top_cut | integer | How many streams to display in the sidebar at most
 wiki | string | The wiki page name to update.
-games | array of strings | A list of games to search Twitch on
 format | dictionary | A key value pair of games to format for the sidebar
 
 An example `config.json` is given below.
 
 ```js
 {
-    "delay": 1800,
+    "username": "myusername",
     "password": "mypassword",
-    "subreddit": "mycoolsubreddit",
-    "top_cut": 10,
-    "user_agent": "Livestream updater for /r/testing -- written by /u/rapptz",
-    "username": "mycoolusername",
-    "wiki": "livestreams",
-    "games": [
-        "Super Smash Bros. Melee",
-        "Super Smash Bros. for Nintendo 3DS",
-        "Super Smash Bros. for Wii U",
-        "Project M",
-        "Super Smash Bros."
-    ],
-
-    "format": {
-        "Super Smash Bros. Melee": "[^^**Melee** **{name}**{viewers}]({url})",
-        "Super Smash Bros. for Nintendo 3DS": "[^^^^^**Smash3DS** **{name}**{viewers}]({url})",
-        "Super Smash Bros. for Wii U": "[^^^^^^**SmashWiiU** **{name}**{viewers}]({url})",
-        "Project M": "[^^^^**ProjectM** **{name}**{viewers}]({url})",
-        "Super Smash Bros.": "[^^^**Smash64** **{name}**{viewers}]({url})"
-    }
+    "delay": 1800,
+    "user_agent": "Livestream updater -- written by /u/rapptz",
+    "subreddits": [
+        {
+            "format": {
+                "Project M": "[^^^^**ProjectM** **{name}**{viewers}]({url})",
+                "Super Smash Bros.": "[^**Smash64** **{name}**{viewers}]({url})",
+                "Super Smash Bros. Brawl": "[^^^**Brawl** **{name}**{viewers}]({url})",
+                "Super Smash Bros. Melee": "[^^**Melee** **{name}**{viewers}]({url})",
+                "Super Smash Bros. for Nintendo 3DS": "[^^^^^**Smash3DS** **{name}**{viewers}]({url})",
+                "Super Smash Bros. for Wii U": "[^^^^^^**SmashWiiU** **{name}**{viewers}]({url})"
+            },
+            "maximum": 49819,
+            "maximum_record": "Jun 28 2015 at 06:29 PM UTC",
+            "minimum": 0,
+            "minimum_record": "Mar 18 2015 at 09:30 PM UTC",
+            "name": "smashbros",
+            "top_cut": 10,
+            "wiki": "livestreams"
+        }
+    ]
 }
+
 
 ```
 
@@ -56,6 +64,13 @@ Currently only twitch is supported.
 The bot also writes to this configuration file with minimum and maximum records which should not be touched.
 
 ## Running and Dependencies
+
+### Easy Way
+
+If you want your subreddit to use the bot without running your own instance, just send a private message to /u/rapptz and
+he'll tell you what to do from there.
+
+### Manual Way
 
 There are a couple dependencies.
 
