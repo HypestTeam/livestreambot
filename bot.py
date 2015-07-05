@@ -8,14 +8,15 @@ import time
 import xml.sax.saxutils as saxutils
 
 config = {}
+subreddit_config = {}
 
 def prettify_json(js, f):
     json.dump(js, f, sort_keys=True, indent=4, separators=(',', ': '))
 
 def get_updated_sidebar_portion(streams):
     result = ['###### START STREAM LIST\n']
-    game_to_format = config['format']
-    for stream in streams[0:config.get('top_cut', 10)]:
+    game_to_format = subreddit_config['format']
+    for stream in streams[0:subreddit_config.get('top_cut', 10)]:
         temp = '- '
         temp += game_to_format.get(stream.game, '[{name}]({url}) {viewers} viewers')
         result.append(temp.format(name=stream.display_name.strip(), url=stream.url, viewers=stream.viewers))
@@ -29,15 +30,24 @@ def get_config():
         return json.load(f)
 
 def verify_valid_config():
-    required_entries = ['user_agent', 'username', 'password']
+    required_entries = ['user_agent', 'username', 'password', 'delay', 'subreddits']
     failure = False
-    error_message = ['bot configuration is valid']
+    error_message = ['bot configuration seems valid']
     for entry in required_entries:
         if entry not in config:
-            failure = True
-            error_message.append('    note: could not find value for key "{}"'.format(entry))
+            error_message.append('note: could not find value for key "{}"'.format(entry))
+
+    # verify 'subreddits' key is valid
+    sub_keys = ['name', 'format', 'wiki']
+    subreddits = config.get('subreddits', None)
+    if subreddits:
+        for subreddit in subreddits:
+            for key in sub_keys:
+                if key not in subreddit:
+                    error_message.append(('note: missing required key ("{}") in "subreddits" object'.format(key)))
 
     stream = sys.stdout
+    failure = len(error_message) > 1
     if failure:
         error_message[0] = 'fatal error: could not configure bot properly'
         stream = sys.stderr
@@ -58,29 +68,30 @@ def prepare_bot():
 def update_sidebar(reddit, streams):
     print('updating sidebar...')
     # get the old sidebar
-    settings = reddit.get_settings(config['subreddit'])
+    subreddit = subreddit_config['name']
+    settings = reddit.get_settings(subreddit)
     old_sidebar = saxutils.unescape(settings['description']) # work around for html escape garbage
     new_portion = get_updated_sidebar_portion(streams)
     new_sidebar = re.sub(r'###### START STREAM LIST.*?###### END STREAM LIST', new_portion, old_sidebar, count=1, flags=re.DOTALL)
-    reddit.update_settings(reddit.get_subreddit(config['subreddit']), description=new_sidebar)
+    reddit.update_settings(reddit.get_subreddit(subreddit), description=new_sidebar)
     print('done...')
 
 def get_record(rec, total, today, fmt, func):
-    entry = config.get(rec, None)
-    entry_record = config.get(rec + '_record', None)
+    entry = subreddit_config.get(rec, None)
+    entry_record = subreddit_config.get(rec + '_record', None)
 
     if entry and func(total, entry) or entry == None and entry_record == None:
         entry = total
         entry_record = today.strftime(fmt)
-        config[rec] = total
-        config[rec + '_record'] = entry_record
+        subreddit_config[rec] = total
+        subreddit_config[rec + '_record'] = entry_record
         update_config()
 
     return (entry, entry_record)
 
 def update_wiki(reddit, streams):
     print('updating wiki...')
-    subreddit = config['subreddit']
+    subreddit = subreddit_config['name']
     interval = config['delay']
     strftime_str = '%b %d %Y at %I:%M %p UTC'
     result = ['Welcome to the /r/{} livestream page!\n'.format(subreddit)]
@@ -111,8 +122,11 @@ def update_wiki(reddit, streams):
     result.append('Lowest number of total viewers: {} on {}\n'.format(minimum, minimum_record))
     result.append('Highest number of total viewers: {} on {}'.format(maximum, maximum_record))
     result.append('')
-    reddit.edit_wiki_page(reddit.get_subreddit(subreddit), config.get('wiki', 'livestreams'), '\n'.join(result), 'Bot action')
+    reddit.edit_wiki_page(reddit.get_subreddit(subreddit), subreddit_config.get('wiki', 'livestreams'), '\n'.join(result), 'Bot action')
     print('done...')
+
+def get_games():
+    return subreddit_config['format'].keys()
 
 def attempt_update(reddit, streams):
     try:
@@ -137,8 +151,13 @@ if __name__ == '__main__':
     config = get_config()
     verify_valid_config()
     reddit = prepare_bot()
+    subreddits = config['subreddits']
     while True:
         print(datetime.now().strftime('Current time %X'))
-        streams = attempt_streams(config['games'])
-        attempt_update(reddit, streams)
+        for subreddit in subreddits:
+            print('Updating /r/{}'.format(subreddit['name']))
+            subreddit_config = subreddit
+            streams = attempt_streams(get_games())
+            attempt_update(reddit, streams)
+
         time.sleep(config.get('delay', 1800))
