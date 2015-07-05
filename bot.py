@@ -112,7 +112,6 @@ def update_wiki(reddit, streams):
         result.append('{0.game}|[{0.display_name}]({0.url})|{0.viewers}|{1}'.format(stream, status))
 
     # check for minimum and maximum
-    (minimum, minimum_record) = get_record('minimum', total, today, strftime_str, lambda x,y: x < y)
     (maximum, maximum_record) = get_record('maximum', total, today, strftime_str, lambda x,y: x > y)
 
     result.append('')
