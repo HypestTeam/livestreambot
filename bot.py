@@ -121,7 +121,6 @@ def update_wiki(reddit, streams):
     result.append('### Statistics')
     result.append('')
     result.append('Total number of viewers: {}\n'.format(total))
-    result.append('Lowest number of total viewers: {} on {}\n'.format(minimum, minimum_record))
     result.append('Highest number of total viewers: {} on {}'.format(maximum, maximum_record))
     result.append('')
     reddit.edit_wiki_page(reddit.get_subreddit(subreddit), subreddit_config.get('wiki', 'livestreams'), '\n'.join(result), 'Bot action')
