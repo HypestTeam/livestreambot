@@ -45,10 +45,6 @@ An example `config.json` is given below.
                 "Super Smash Bros. for Nintendo 3DS": "[^^^^^**Smash3DS** **{name}**{viewers}]({url})",
                 "Super Smash Bros. for Wii U": "[^^^^^^**SmashWiiU** **{name}**{viewers}]({url})"
             },
-            "maximum": 49819,
-            "maximum_record": "Jun 28 2015 at 06:29 PM UTC",
-            "minimum": 0,
-            "minimum_record": "Mar 18 2015 at 09:30 PM UTC",
             "name": "smashbros",
             "top_cut": 10,
             "wiki": "livestreams"
