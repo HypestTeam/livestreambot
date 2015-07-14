@@ -17,6 +17,9 @@ password | string | The reddit password
 user_agent | string | The bot's user agent
 delay | integer | Length between updates in seconds.
 subreddits | list of objects | A list of objects that gives information of what subreddits to update
+client | string | The app client ID (for OAuth2)
+secret | string | The app's client secret (for OAuth2)
+redirect | string | The app's redirect URI (for OAuth2)
 
 Likewise, the subreddits object requires these keys:
 

@@ -6,6 +6,9 @@ import praw
 from datetime import datetime
 import time
 import xml.sax.saxutils as saxutils
+import requests
+import requests.auth
+import traceback
 
 config = {}
 subreddit_config = {}
@@ -33,7 +36,7 @@ def get_config():
         return json.load(f)
 
 def verify_valid_config():
-    required_entries = ['user_agent', 'username', 'password', 'delay', 'subreddits']
+    required_entries = ['user_agent', 'username', 'password', 'client', 'secret', 'redirect', 'delay', 'subreddits']
     failure = False
     error_message = ['bot configuration seems valid']
     for entry in required_entries:
@@ -63,9 +66,21 @@ def update_config():
     with open('config.json', 'w') as f:
         prettify_json(config, f)
 
+def get_oauth_token():
+    auth = requests.auth.HTTPBasicAuth(config['client'], config['secret'])
+    data = { 'grant_type': 'password', 'username': config['username'], 'password': config['password'] }
+    headers = { 'User-Agent': config['user_agent'] }
+    response = requests.post('https://www.reddit.com/api/v1/access_token', auth=auth, data=data, headers=headers)
+    result = response.json()
+    result['scope'] = set([result['scope']])
+    return result
+
 def prepare_bot():
     r = praw.Reddit(config['user_agent'])
-    r.login(config['username'], config['password'])
+    # set the app info
+    r.set_oauth_app_info(config['client'], config['secret'], config['redirect'])
+    token = get_oauth_token()
+    r.set_access_credentials(config['scope'], token['access_token'])
     return r
 
 def update_sidebar(reddit, streams):
@@ -135,7 +150,8 @@ def attempt_update(reddit, streams):
         update_wiki(reddit, streams)
     except Exception as e:
         # try again in 1 minute
-        print('An error has occurred: {}, trying again in one minute...'.format(str(e)))
+        exception_format = traceback.format_exception_only(sys.exc_type, sys.exc_value)
+        print('An error has occurred:\n{}\nTrying again in one minutes...'.format(exception_format[0]))
         time.sleep(60)
         attempt_update(reddit, streams)
 
@@ -144,21 +160,40 @@ def attempt_streams(games):
         return twitch.get_streams(games)
     except Exception as e:
         # error happened here so attempt to retry
-        print('An error has occurred:\n{}\nTrying again in five minutes...')
+        exception_format = traceback.format_exception_only(sys.exc_type, sys.exc_value)
+        print('An error has occurred:\n{}\nTrying again in five minutes...'.format(exception_format[0]))
         time.sleep(60 * 5)
         return attempt_streams(games)
 
 if __name__ == '__main__':
-    config = get_config()
-    verify_valid_config()
-    reddit = prepare_bot()
-    subreddits = config['subreddits']
-    while True:
-        print(datetime.now().strftime('Current time %X'))
-        for subreddit in subreddits:
-            print('Updating /r/{}'.format(subreddit['name']))
-            subreddit_config = subreddit
-            streams = attempt_streams(get_games())
-            attempt_update(reddit, streams)
+    try:
+        config = get_config()
+        config['scope'] = set('creddits edit flair history identity modconfig modcontributors '
+                              'modflair modlog modothers modposts modself modwiki mysubreddits '
+                              'privatemessages read report save submit subscribe vote wikiedit wikiread'.split(' '))
+        verify_valid_config()
+        reddit = prepare_bot()
+        subreddits = config['subreddits']
+        if reddit.is_oauth_session():
+            print('OAuth2 Login Successful')
+        else:
+            raise RuntimeError('OAuth2 session is unsuccessful')
+    except Exception as e:
+        print('An internal error has occurred')
+        print(traceback.format_exc())
+    else:
+        while True:
+            try:
+                for subreddit in subreddits:
+                    print('Updating /r/{}'.format(subreddit['name']))
+                    print(datetime.now().strftime('Current time %X'))
+                    subreddit_config = subreddit
+                    streams = attempt_streams(get_games())
+                    attempt_update(reddit, streams)
 
-        time.sleep(config.get('delay', 1800))
+                time.sleep(config.get('delay', 1800))
+            except praw.errors.HTTPException as e:
+                # we got an OAuth error (I think)
+                token = get_oauth_token()
+                reddit.set_access_credentials(config['scope'], token['access_token'])
+
