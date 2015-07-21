@@ -20,6 +20,11 @@ def update_streams(streams, result, game):
             except Exception as e:
                 name = channel.get('name', 'null')
                 print('Something happened over at channel {} for game {}'.format(name, game))
+                print('{}: {}'.format(type(e).__name__, str(e)))
+                with open(name + '.json', 'w') as f:
+                    json.dump(stream, f, indent=4)
+                    print('A JSON dump has been provided at ' + f.name)
+                    print('Make sure to delete it afterwards')
 
 def get_game(stream_url, streams, game_name):
     r = requests.get(stream_url, params={'game': game_name })
