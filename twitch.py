@@ -16,15 +16,17 @@ def update_streams(streams, result, game):
         channel = stream['channel']
         if stream['viewers'] and channel:
             try:
-                result.append(Stream(url=channel['url'], viewers=stream['viewers'], display_name=channel['display_name'], game=game, status=channel['status']))
+                name = channel['name']
+                url = channel.get('url') or 'http://twitch.tv/' + name
+                status = channel.get('status', '')
+                result.append(Stream(url=url, viewers=stream['viewers'], display_name=channel['display_name'], game=game, status=status))
             except Exception as e:
                 name = channel.get('name', 'null')
                 print('Something happened over at channel {} for game {}'.format(name, game))
                 print('{}: {}'.format(type(e).__name__, str(e)))
-                with open(name + '.json', 'w') as f:
+                with open(name + '_error_dump.json', 'w') as f:
                     json.dump(stream, f, indent=4)
                     print('A JSON dump has been provided at ' + f.name)
-                    print('Make sure to delete it afterwards')
 
 def get_game(stream_url, streams, game_name):
     r = requests.get(stream_url, params={'game': game_name })
