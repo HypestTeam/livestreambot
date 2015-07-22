@@ -72,7 +72,11 @@ def get_oauth_token():
     headers = { 'User-Agent': config['user_agent'] }
     response = requests.post('https://www.reddit.com/api/v1/access_token', auth=auth, data=data, headers=headers)
     result = response.json()
-    result['scope'] = set([result['scope']])
+    if result['scope'] == '*':
+        result['scope'] = set('creddits edit flair history identity modconfig modcontributors '
+                              'modflair modlog modothers modposts modself modwiki mysubreddits '
+                              'privatemessages read report save submit subscribe vote wikiedit wikiread'.split(' '))
+
     return result
 
 def prepare_bot():
@@ -80,7 +84,7 @@ def prepare_bot():
     # set the app info
     r.set_oauth_app_info(config['client'], config['secret'], config['redirect'])
     token = get_oauth_token()
-    r.set_access_credentials(config['scope'], token['access_token'])
+    r.set_access_credentials(token['scope'], token['access_token'])
     return r
 
 def update_sidebar(reddit, streams):
@@ -148,6 +152,8 @@ def attempt_update(reddit, streams):
     try:
         update_sidebar(reddit, streams)
         update_wiki(reddit, streams)
+    except praw.errors.OAuthException as e:
+        raise e
     except Exception as e:
         # try again in 1 minute
         exception_format = traceback.format_exception_only(sys.exc_type, sys.exc_value)
@@ -158,6 +164,8 @@ def attempt_update(reddit, streams):
 def attempt_streams(games):
     try:
         return twitch.get_streams(games)
+    except praw.errors.OAuthException as e:
+        raise e
     except Exception as e:
         # error happened here so attempt to retry
         exception_format = traceback.format_exception_only(sys.exc_type, sys.exc_value)
@@ -168,9 +176,6 @@ def attempt_streams(games):
 if __name__ == '__main__':
     try:
         config = get_config()
-        config['scope'] = set('creddits edit flair history identity modconfig modcontributors '
-                              'modflair modlog modothers modposts modself modwiki mysubreddits '
-                              'privatemessages read report save submit subscribe vote wikiedit wikiread'.split(' '))
         verify_valid_config()
         reddit = prepare_bot()
         subreddits = config['subreddits']
@@ -192,8 +197,8 @@ if __name__ == '__main__':
                     attempt_update(reddit, streams)
 
                 time.sleep(config.get('delay', 1800))
-            except praw.errors.HTTPException as e:
+            except praw.errors.OAuthException as e:
                 # we got an OAuth error (I think)
                 token = get_oauth_token()
-                reddit.set_access_credentials(config['scope'], token['access_token'])
+                reddit.set_access_credentials(token['scope'], token['access_token'])
 
