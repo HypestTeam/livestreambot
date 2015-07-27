@@ -26,7 +26,6 @@ def get_updated_sidebar_portion(streams):
             game_format = '[{name}]({url}) {viewers} viewers'
         temp += game_format
         result.append(temp.format(name=stream.display_name.strip(), url=stream.url, viewers=stream.viewers))
-        result.append('')
 
     result.append('\n###### END STREAM LIST')
     return '\n'.join(result)
