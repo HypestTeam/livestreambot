@@ -12,14 +12,15 @@ import traceback
 
 config = {}
 subreddit_config = {}
+MAX_SIDEBAR_LENGTH = 5120
 
 def prettify_json(js, f):
     json.dump(js, f, sort_keys=True, indent=4, separators=(',', ': '))
 
-def get_updated_sidebar_portion(streams):
+def get_updated_sidebar_portion(streams, count):
     result = ['###### START STREAM LIST\n']
     game_to_format = subreddit_config['format']
-    for stream in streams[0:subreddit_config.get('top_cut', 10)]:
+    for stream in streams[0:count]:
         temp = '- '
         game_format = game_to_format.get(stream.game, None)
         if not game_format:
@@ -92,9 +93,18 @@ def update_sidebar(reddit, streams):
     subreddit = subreddit_config['name']
     settings = reddit.get_settings(subreddit)
     old_sidebar = saxutils.unescape(settings['description']) # work around for html escape garbage
-    new_portion = get_updated_sidebar_portion(streams)
-    new_sidebar = re.sub(r'###### START STREAM LIST.*?###### END STREAM LIST', new_portion, old_sidebar, count=1, flags=re.DOTALL)
-    reddit.update_settings(reddit.get_subreddit(subreddit), description=new_sidebar)
+    count = subreddit_config.get('top_cut', 10)
+    while count != 0:
+        new_portion = get_updated_sidebar_portion(streams, count)
+        new_sidebar = re.sub(r'###### START STREAM LIST.*?###### END STREAM LIST', new_portion, old_sidebar, count=1, flags=re.DOTALL)
+
+        if len(new_sidebar) <= MAX_SIDEBAR_LENGTH:
+            reddit.update_settings(reddit.get_subreddit(subreddit), description=new_sidebar)
+            break
+
+        count = count / 2
+        print('Sidebar too long... trying again with {} streams'.format(count))
+
     print('done...')
 
 def get_record(rec, total, today, fmt, func):
@@ -153,6 +163,9 @@ def attempt_update(reddit, streams):
         update_wiki(reddit, streams)
     except praw.errors.OAuthException as e:
         raise e
+    except praw.errors.APIException as e:
+        print('An error has occurred:\n{}'.format(traceback.format_exception_only(sys.exc_type, sys.exc_value)[0]))
+        print('Skipping...')
     except Exception as e:
         # try again in 1 minute
         exception_format = traceback.format_exception_only(sys.exc_type, sys.exc_value)
