@@ -3,11 +3,11 @@ import json
 
 class Stream(object):
     def __init__(self, **kwargs):
-        self.url = kwargs.get('url', None)
-        self.viewers = kwargs.get('viewers', None)
-        self.display_name = kwargs.get('display_name', None)
-        self.game = kwargs.get('game', None)
-        self.status = kwargs.get('status', 'No status').encode('utf-8').strip()
+        self.url = kwargs.get('url')
+        self.viewers = kwargs.get('viewers')
+        self.display_name = kwargs.get('display_name')
+        self.game = kwargs.get('game')
+        self.status = kwargs.get('status').encode('utf-8').strip()
 
 def update_streams(streams, result, game):
     # update the stream list
@@ -18,7 +18,7 @@ def update_streams(streams, result, game):
             try:
                 name = channel['name']
                 url = channel.get('url') or 'http://twitch.tv/' + name
-                status = channel.get('status', '')
+                status = channel.get('status') or '' # handle None case
                 result.append(Stream(url=url, viewers=stream['viewers'], display_name=channel['display_name'], game=game, status=status))
             except Exception as e:
                 name = channel.get('name', 'null')
