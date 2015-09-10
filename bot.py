@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from __future__ import print_function
-import twitch
+import twitch, hitbox
 import re, json, sys
 import praw
 from datetime import datetime
@@ -175,7 +175,13 @@ def attempt_update(reddit, streams):
 
 def attempt_streams(games):
     try:
-        return twitch.get_streams(games)
+        streams = twitch.get_streams(games)
+        if subreddit_config.get('hitbox', False):
+            streams.extend(hitbox.get_streams(games))
+
+        # sort based on viewers
+        streams.sort(key=lambda x: x.viewers, reverse=True)
+        return streams
     except praw.errors.OAuthException as e:
         raise e
     except Exception as e:

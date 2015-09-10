@@ -41,6 +41,4 @@ def get_streams(games):
     for game in games:
         get_game(stream_url, streams, game)
 
-    # sort based on viewers
-    streams.sort(key=lambda x: x.viewers, reverse=True)
     return streams

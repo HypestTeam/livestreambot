@@ -29,6 +29,7 @@ name | string | The subreddit name
 top_cut | integer | How many streams to display in the sidebar at most
 wiki | string | The wiki page name to update.
 format | dictionary | A key value pair of games to format for the sidebar
+hitbox | boolean | A boolean that indicates if hitbox.tv streams should show up
 
 An example `config.json` is given below.
 
@@ -50,7 +51,8 @@ An example `config.json` is given below.
             },
             "name": "smashbros",
             "top_cut": 10,
-            "wiki": "livestreams"
+            "wiki": "livestreams",
+            "hitbox": true
         }
     ]
 }
