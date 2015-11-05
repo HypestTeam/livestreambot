@@ -10,7 +10,7 @@ def update_streams(streams, result, game):
         if stream['viewers'] and channel:
             try:
                 name = channel['name']
-                url = channel.get('url') or 'http://twitch.tv/' + name
+                url = 'http://twitch.tv/' + name
                 status = channel.get('status') or '' # handle None case
                 result.append(Stream(url=url, viewers=stream['viewers'], display_name=channel['display_name'], game=game, status=status))
             except Exception as e:
