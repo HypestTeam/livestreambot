@@ -120,6 +120,13 @@ def get_record(rec, total, today, fmt, func):
 
     return (entry, entry_record)
 
+def sanitize_input(data):
+    """Sanitizes input for reddit markdown tables"""
+    data = data.replace('|', '&#124;')
+    data = data.replace('\n', '')
+    data = data.replace('*', '\\*')
+    return data
+
 def update_wiki(reddit, streams):
     print('updating wiki...')
     subreddit = subreddit_config['name']
@@ -139,7 +146,7 @@ def update_wiki(reddit, streams):
     result.append(':---------|:-------|:-------:|:-------')
     for stream in streams:
         total += stream.viewers
-        status = stream.status.replace('|', '&#124;') # escape special character for tables
+        status = sanitize_input(stream.status)
         result.append('{0.game}|[{0.display_name}]({0.url})|{0.viewers}|{1}'.format(stream, status))
 
     # check for minimum and maximum
