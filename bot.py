@@ -111,7 +111,7 @@ def get_record(rec, total, today, fmt, func):
     entry = subreddit_config.get(rec, None)
     entry_record = subreddit_config.get(rec + '_record', None)
 
-    if entry and func(total, entry) or entry == None and entry_record == None:
+    if (entry is None and entry_record is None) or (entry is not None and func(total, entry)):
         entry = total
         entry_record = today.strftime(fmt)
         subreddit_config[rec] = total
