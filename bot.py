@@ -36,7 +36,8 @@ def get_config():
         return json.load(f)
 
 def verify_valid_config():
-    required_entries = ['user_agent', 'username', 'password', 'client', 'secret', 'redirect', 'delay', 'subreddits']
+    required_entries = ['user_agent', 'username', 'password', 'client',
+                        'secret', 'redirect', 'delay', 'subreddits', 'twitch_client_id']
     failure = False
     error_message = ['bot configuration seems valid']
     for entry in required_entries:
@@ -102,7 +103,7 @@ def update_sidebar(reddit, streams):
             reddit.update_settings(reddit.get_subreddit(subreddit), description=new_sidebar)
             break
 
-        count = count / 2
+        count = int(count / 2)
         print('Sidebar too long... trying again with {} streams'.format(count))
 
     print('done...')
@@ -171,12 +172,14 @@ def attempt_update(reddit, streams):
     except praw.errors.OAuthException as e:
         raise e
     except praw.errors.APIException as e:
-        print('An error has occurred:\n{}'.format(traceback.format_exception_only(sys.exc_type, sys.exc_value)[0]))
+        print('An error has occurred:')
+        traceback.print_exc()
         print('Skipping...')
     except Exception as e:
         # try again in 1 minute
-        exception_format = traceback.format_exception_only(sys.exc_type, sys.exc_value)
-        print('An error has occurred:\n{}\nTrying again in one minutes...'.format(exception_format[0]))
+        print('An error has occurred while updating streams.')
+        traceback.print_exc()
+        print('Trying again in 1 minute.')
         time.sleep(60)
         attempt_update(reddit, streams)
 
@@ -193,8 +196,9 @@ def attempt_streams(games):
         raise e
     except Exception as e:
         # error happened here so attempt to retry
-        exception_format = traceback.format_exception_only(sys.exc_type, sys.exc_value)
-        print('An error has occurred:\n{}\nTrying again in five minutes...'.format(exception_format[0]))
+        print('An error has occurred:')
+        traceback.print_exc()
+        print('Trying again in 5 minutes...')
         time.sleep(60 * 5)
         return attempt_streams(games)
 
@@ -210,8 +214,9 @@ if __name__ == '__main__':
             raise RuntimeError('OAuth2 session is unsuccessful')
     except Exception as e:
         print('An internal error has occurred')
-        print(traceback.format_exc())
+        traceback.print_exc()
     else:
+        twitch.set_client_id(config['twitch_client_id'])
         while True:
             try:
                 for subreddit in subreddits:

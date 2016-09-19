@@ -20,6 +20,7 @@ subreddits | list of objects | A list of objects that gives information of what 
 client | string | The app client ID (for OAuth2)
 secret | string | The app's client secret (for OAuth2)
 redirect | string | The app's redirect URI (for OAuth2)
+twitch_client_id | string | The Client ID used for Twitch API requests.
 
 Likewise, the subreddits object requires these keys:
 

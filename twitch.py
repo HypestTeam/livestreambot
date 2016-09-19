@@ -2,6 +2,12 @@ import requests
 import json
 from stream import Stream
 
+_client_id = None
+
+def set_client_id(value):
+    global _client_id
+    _client_id = value
+
 def update_streams(streams, result, game):
     # update the stream list
     for stream in streams:
@@ -22,7 +28,7 @@ def update_streams(streams, result, game):
                     print('A JSON dump has been provided at ' + f.name)
 
 def get_game(stream_url, streams, game_name):
-    r = requests.get(stream_url, params={'game': game_name })
+    r = requests.get(stream_url, params={'game': game_name }, headers={ 'client-id': _client_id })
     print('Status Code for "{}": {}'.format(game_name, r.status_code))
     if r.status_code != 200:
         return None
