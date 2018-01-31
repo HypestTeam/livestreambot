@@ -12,7 +12,7 @@ import traceback
 
 config = {}
 subreddit_config = {}
-MAX_SIDEBAR_LENGTH = 5120
+MAX_SIDEBAR_LENGTH = 10240
 
 def prettify_json(js, f):
     json.dump(js, f, sort_keys=True, indent=4, separators=(',', ': '))
@@ -202,8 +202,10 @@ def attempt_streams(games):
         time.sleep(60 * 5)
         return attempt_streams(games)
 
-if __name__ == '__main__':
+def run():
     try:
+        global config
+        global subreddit_config
         config = get_config()
         verify_valid_config()
         reddit = prepare_bot()
@@ -215,6 +217,7 @@ if __name__ == '__main__':
     except Exception as e:
         print('An internal error has occurred')
         traceback.print_exc()
+        raise e
     else:
         twitch.set_client_id(config['twitch_client_id'])
         while True:
@@ -232,3 +235,13 @@ if __name__ == '__main__':
                 token = get_oauth_token()
                 reddit.set_access_credentials(token['scope'], token['access_token'])
 
+def main():
+    while True:
+        try:
+            run()
+        except Exception:
+            print('Waiting 5 minutes to retry...')
+            time.sleep(60 * 5.0)
+
+if __name__ == '__main__':
+    main()
