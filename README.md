@@ -19,7 +19,6 @@ delay | integer | Length between updates in seconds.
 subreddits | list of objects | A list of objects that gives information of what subreddits to update
 client | string | The app client ID (for OAuth2)
 secret | string | The app's client secret (for OAuth2)
-redirect | string | The app's redirect URI (for OAuth2)
 twitch_client_id | string | The Client ID used for Twitch API requests.
 
 Likewise, the subreddits object requires these keys:
@@ -30,7 +29,6 @@ name | string | The subreddit name
 top_cut | integer | How many streams to display in the sidebar at most
 wiki | string | The wiki page name to update.
 format | dictionary | A key value pair of games to format for the sidebar
-hitbox | boolean | A boolean that indicates if hitbox.tv streams should show up
 
 An example `config.json` is given below.
 
@@ -77,11 +75,13 @@ he'll tell you what to do from there.
 There are a couple dependencies.
 
 - [praw](https://github.com/praw-dev/praw), which is used for the reddit API integration.
-- [requests](https://github.com/kennethreitz/requests/) which is used for the HTTP requests.
+- [aiohttp](https://github.com/aio-libs/aiohttp) which is used for the HTTP requests.
+
+Note that this bot requires Python 3.7 or higher.
 
 Installing the dependencies should be as easy as doing:
 
-    pip install praw && pip install requests
+    pip install praw && pip install aiohttp
 
 On the command line.
 
