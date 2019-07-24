@@ -21,7 +21,8 @@ def retry(seconds):
                         praw.exceptions.APIException,
                         prawcore.exceptions.PrawcoreException) as e:
                     subreddit = self.subreddit.name
-                    log.exception('Error in %s (for /r/%s). Retrying in %.2fs', func.__name__, subreddit, seconds)
+                    exc = f'{e.__class__.__module__}.{e.__class__.__qualname__}: {e}'
+                    log.error('%s (for /r/%s) failed with %s. Retrying in %ds', func.__name__, subreddit, exc, seconds)
                     await asyncio.sleep(seconds)
                     continue
                 else:
