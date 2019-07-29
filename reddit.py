@@ -19,6 +19,7 @@ def retry(seconds):
                 except (OSError,
                         aiohttp.ClientResponseError,
                         praw.exceptions.APIException,
+                        asyncio.TimeoutError,
                         prawcore.exceptions.PrawcoreException) as e:
                     subreddit = self.subreddit.name
                     exc = f'{e.__class__.__module__}.{e.__class__.__qualname__}: {e}'
