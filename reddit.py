@@ -7,6 +7,8 @@ import logging
 import functools
 import re
 
+from errors import RetryRequestLater
+
 log = logging.getLogger(__name__)
 
 def retry(seconds):
@@ -17,6 +19,7 @@ def retry(seconds):
                 try:
                     result = await func(self, *args, **kwargs)
                 except (OSError,
+                        RetryRequestLater,
                         aiohttp.ClientResponseError,
                         praw.exceptions.APIException,
                         asyncio.TimeoutError,

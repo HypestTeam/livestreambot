@@ -3,6 +3,8 @@ import asyncio
 import logging
 import yarl
 
+from errors import RetryRequestLater
+
 log = logging.getLogger(__name__)
 
 class Stream:
@@ -73,6 +75,9 @@ class Twitch:
     async def get_game_ids(self, game_names):
         params = [('name', name) for name in game_names]
         data = await self.request('GET', 'games', params=params)
+        if data is None:
+            raise RetryRequestLater('Could not get game IDs')
+
         return {
             x.get('id'): x.get('name')
             for x in data.get('data', [])
@@ -82,4 +87,6 @@ class Twitch:
         params = [('game_id', game_id) for game_id in game_ids]
         params.append(('first', 100))
         data = await self.request('GET', 'streams', params=params)
+        if data is None:
+            raise RetryRequestLater('Could not get streams by ID')
         return [Stream.from_twitch(d) for d in data.get('data', [])]
