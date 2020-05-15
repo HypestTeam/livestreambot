@@ -101,6 +101,7 @@ class Config(metaclass=ConfigMeta):
     username: str
     password: str
     twitch_client_id: str
+    twitch_client_secret: str
     secret: str
     delay: int
     subreddits: typing.List[SubredditConfig]

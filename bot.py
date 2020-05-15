@@ -35,7 +35,8 @@ class Bot:
         self.loop = asyncio.get_event_loop()
         async with aiohttp.ClientSession(loop=self.loop) as session:
             self.session = session
-            self.twitch = Twitch(session, self.config.twitch_client_id)
+            self.twitch = Twitch(session, self.config.twitch_client_id, self.config.twitch_client_secret)
+            await self.twitch.fetch_token()
 
             subreddit_tasks = [
                 SubredditTask(self, subreddit)

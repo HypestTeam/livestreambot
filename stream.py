@@ -22,9 +22,12 @@ class Stream:
 
 class Twitch:
     BASE_URL = yarl.URL('https://api.twitch.tv/helix/')
-    def __init__(self, session, client_id):
+    def __init__(self, session, client_id, client_secret):
         self.session = session
         self.client_id = client_id
+        self.client_secret = client_secret
+        self.token = None
+        self.expires_in = datetime.datetime(1970, 1, 1)
 
     def get_ratelimit_delta(self, resp):
         reset = float(resp.headers['Ratelimit-Reset'])
@@ -32,11 +35,43 @@ class Twitch:
         delta = (dt - datetime.datetime.utcnow()).total_seconds()
         return delta
 
-    async def request(self, method, path, *, params=None, headers=None):
-        if headers is None:
-            headers = {
-                'Client-ID': self.client_id
-            }
+    async def fetch_token(self):
+        params = {
+            'client_id': self.client_id,
+            'client_secret': self.client_secret,
+            'grant_type': 'client_credentials',
+        }
+
+        for i in range(3):
+            async with self.session.post('https://id.twitch.tv/oauth2/token', params=params) as resp:
+                log.info('Twitch Token Retrieval responded with %d', resp.status)
+                if resp.status == 429:
+                    delta = self.get_ratelimit_delta(resp)
+                    log.warning('Ratelimited on %s for %.2f seconds', resp.url, delta)
+                    await asyncio.sleep(delta)
+                    continue
+
+                if resp.status == 503:
+                    log.warning('Service unavailable (%s). Retrying in 5 seconds...', resp.url)
+                    await asyncio.sleep(5)
+                    continue
+
+                resp.raise_for_status()
+                data = await resp.json()
+                self.token = data['access_token']
+                self.expires_in = datetime.datetime.utcnow() + datetime.timedelta(seconds=data['expires_in'])
+                log.info('Received token that expires at %s', self.expires_in.isoformat())
+                return
+
+    async def request(self, method, path, *, params=None):
+        now = datetime.datetime.utcnow()
+        if now > self.expires_in:
+            await self.fetch_token()
+
+        headers = {
+            'Authorization': f'Bearer {self.token}',
+            'Client-ID': self.client_id,
+        }
 
         for i in range(3):
             async with self.session.request(method, self.BASE_URL / path, params=params, headers=headers) as resp:
@@ -51,6 +86,11 @@ class Twitch:
                     log.warning('Service unavailable (%s). Retrying in 5 seconds...', resp.url)
                     await asyncio.sleep(5)
                     continue
+
+                if resp.status == 401:
+                    data = await resp.json()
+                    log.error('Unauthorized response: %s', data['message'])
+                    resp.raise_for_status()
 
                 resp.raise_for_status()
                 return await resp.json()
