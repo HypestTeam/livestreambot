@@ -101,15 +101,14 @@ class SubredditTask:
         return '\n'.join(result)
 
     def _update_sidebar(self, streams):
-        mod = self.sub.mod
-        settings = mod.settings()
-        old_sidebar = settings['description']
+        sidebar = self.sub.wiki['config/sidebar']
+        old_sidebar = sidebar.content_md
         count = self.subreddit.top_cut
         while count != 0:
             to_replace = self.get_updated_sidebar_portion(streams[0:count])
             new_sidebar = SIDEBAR_REGEX.sub(to_replace, old_sidebar, count=1)
             if len(new_sidebar) <= MAX_SIDEBAR_LENGTH:
-                mod.update(description=new_sidebar)
+                sidebar.edit(content=new_sidebar)
                 break
             count = count // 2
             log.info('Sidebar for %s too long. Trying again with %d streams.', self.subreddit.name, count)
