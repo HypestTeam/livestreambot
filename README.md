@@ -26,9 +26,19 @@ Likewise, the subreddits object requires these keys:
 Key | Value Type | Description
 :----|:----------|:------------
 name | string | The subreddit name
+widget | object | The sidebar widget settings to update (new reddit)
 top_cut | integer | How many streams to display in the sidebar at most
 wiki | string | The wiki page name to update.
 format | dictionary | A key value pair of games to format for the sidebar
+
+The widget object requires these keys:
+
+Key | Value Type | Description
+:----|:----------|:------------
+name | string | The widget name to update (case sensitive)
+table | boolean | Whether to use a simple table to update the text with
+
+If the widget doesn't use the simple table then it falls back to the format list.
 
 An example `config.json` is given below.
 
@@ -51,7 +61,10 @@ An example `config.json` is given below.
             "name": "smashbros",
             "top_cut": 10,
             "wiki": "livestreams",
-            "hitbox": true
+            "widget": {
+                "name": "Live Streams",
+                "table": true
+            }
         }
     ]
 }

@@ -36,6 +36,7 @@ def retry(seconds):
 
 SIDEBAR_REGEX = re.compile(r'###### START STREAM LIST(.*?)###### END STREAM LIST', re.DOTALL)
 MAX_SIDEBAR_LENGTH = 10240
+MAX_WIDGET_LENGTH = 10000
 
 def sanitize_input(data):
     """Sanitizes input for reddit markdown tables"""
@@ -119,6 +120,57 @@ class SubredditTask:
     async def update_sidebar(self, streams):
         await self.bot.loop.run_in_executor(None, self._update_sidebar, streams)
 
+    def _get_widget(self):
+        if not self.subreddit.widget:
+            return None
+
+        widgets = self.sub.widgets.sidebar
+        types = (praw.models.CustomWidget, praw.models.TextArea)
+
+        for widget in widgets:
+            if isinstance(widget, types) and widget.shortName == self.subreddit.widget.name:
+                return widget
+        return None
+
+    def get_updated_widget_text(self, streams):
+        wiki_url = f'https://reddit.com/r/{self.subreddit.name}/wiki/{self.subreddit.wiki}'
+        if not self.subreddit.widget.table:
+            text = self.get_updated_sidebar_portion(streams)
+            return f'{text}\n\n[Check the full list here]({wiki_url})'
+
+        result = [
+            'Stream | Views',
+            ':------:|:-----:',
+        ]
+
+        for stream in streams:
+            result.append(f'[{stream.name}]({stream.url})|{stream.viewers}')
+
+        result.append(f'\n[Check the full list here]({wiki_url})')
+        return '\n'.join(result)
+
+    def _update_widget(self, streams):
+        widget = self._get_widget()
+        if widget is None:
+            log.info('No widget found for /r/%s', self.subreddit.name)
+            return
+
+        count = self.subreddit.top_cut
+        while count != 0:
+            text = self.get_updated_widget_text(streams)
+            if len(text) <= MAX_WIDGET_LENGTH:
+                widget.mod.update(text=text)
+                break
+
+            count = count // 2
+            log.info('Widget for %s too long. Trying again with %d streams.', self.subreddit.name, count)
+
+        log.info('Widget update complete for /r/%s.', self.subreddit.name)
+
+    @retry(60.0)
+    async def update_widget(self, streams):
+        await self.bot.loop.run_in_executor(None, self._update_widget, streams)
+
     def _update_wiki(self, streams):
         wiki = self.sub.wiki
         name = self.subreddit.name
@@ -173,6 +225,7 @@ class SubredditTask:
                 log.info('Beginning update on /r/%s', name)
                 streams = await self.get_streams()
                 await self.update_sidebar(streams)
+                await self.update_widget(streams)
                 await self.update_wiki(streams)
                 log.info('Completed update on /r/%s', name)
                 await asyncio.sleep(delay)

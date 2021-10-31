@@ -84,11 +84,16 @@ class ConfigMeta(type):
         attrs['to_dict'] = to_dict
         return super().__new__(metacls, name, base, attrs)
 
+class SubredditWidgetConfig(metaclass=ConfigMeta):
+    name: str
+    table: bool
+
 class SubredditConfig(metaclass=ConfigMeta):
     format: dict
     top_cut: int
     wiki: str
     name: str
+    widget: typing.Optional[SubredditWidgetConfig]
     maximum: typing.Optional[int]
     minimum: typing.Optional[int]
     minimum_record: typing.Optional[str]
